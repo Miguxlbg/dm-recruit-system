@@ -1,0 +1,1 @@
+module.exports = { apps: [{ name: 'dm-system-recruit-v1', script: 'npm', args: 'start', cwd: '/home/user/webapp', env: { NODE_ENV: 'production', PORT: 3000 }, instances: 1, exec_mode: 'fork', watch: false }] }

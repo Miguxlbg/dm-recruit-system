@@ -1,0 +1,37 @@
+{
+  "name": "dm-system-recruit",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -H 0.0.0.0 -p 3000",
+    "build": "next build --webpack",
+    "start": "next start -H 0.0.0.0 -p 3000",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "@hookform/resolvers": "^3.10.0",
+    "@supabase/supabase-js": "^2.52.1",
+    "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
+    "lucide-react": "^0.468.0",
+    "next": "^16.2.10",
+    "next-themes": "^0.4.6",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-hook-form": "^7.62.0",
+    "recharts": "^2.15.4",
+    "tailwind-merge": "^2.6.0",
+    "unpdf": "^1.6.2",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.9",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.10",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.8.3"
+  }
+}
