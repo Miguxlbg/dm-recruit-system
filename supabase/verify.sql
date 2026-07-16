@@ -11,3 +11,4 @@ union all select 'trainings', count(*) from public.trainings
 union all select 'training_enrollments', count(*) from public.training_enrollments;
 
 select id, name, public, file_size_limit from storage.buckets where id = 'hr-files';
+select id, display_name, login_email, theme, language from public.app_profile;

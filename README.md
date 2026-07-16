@@ -1,86 +1,90 @@
-# DM System Recruit — Versão 1.0
+# DM System Recruit — Versão 2.0 Beta
 
-Sistema interno completo de RH e recrutamento para operação por uma única pessoa. Não há dados de demonstração: todas as telas leem e gravam dados reais no Supabase.
+Cockpit completo de RH, recrutamento e gestão de pessoas para uma operação individual. Interface premium, autenticação exclusiva, perfil profissional personalizável, dados reais no Supabase e deploy pronto para Vercel.
 
-## Funcionalidades concluídas
+## Novidades da versão 2.0
 
-- Portão de senha única por `APP_PASSWORD`, cookie `HttpOnly`, `SameSite=Lax` e expiração em 12 horas.
-- Dashboard com funcionários ativos, vagas, onboardings, treinamentos vencidos, aniversários e entrevistas.
-- Diretório de funcionários, departamentos, foto por URL ou upload e gestor direto.
-- Organograma recursivo baseado no gestor direto.
-- Templates e tarefas de onboarding; ao criar um onboarding, as tarefas do template são copiadas automaticamente.
-- Ciclos, perguntas e avaliações 360°, incluindo resumo com Gemini Flash.
-- Turnos, calendário de escalas e solicitações de férias/folga.
-- ATS com vagas, candidatos, upload privado de currículo, Kanban, score de match por IA e entrevistas.
-- Agendamento rápido de entrevista e criação de sala em `meet.google.com/new`.
-- Treinamentos, matrículas, validade, status e certificados.
-- Tema claro/escuro e interface em português/inglês.
-- Layout responsivo, animações leves e suporte a `prefers-reduced-motion`.
-- APIs e arquivos privados sem cache compartilhado.
+- Login corrigido: acesso pelo único e-mail autorizado **ou** pela senha configurada.
+- Fallback inicial solicitado: e-mail `dmmsb19@gmail.com` e senha `123456`.
+- Menu de perfil completo no canto superior direito.
+- Tela **Meu Perfil** com foto por upload/URL, nome, cargo, bio, contatos e redes sociais.
+- Marca própria com upload/URL de logotipo.
+- Tema claro, escuro ou automático, cor de destaque, idioma e fuso horário.
+- Alteração do e-mail autorizado e da senha dentro do sistema.
+- Assinatura automática de e-mail com visualização, cópia HTML e download.
+- Exportação do perfil em JSON.
+- Login com background animado, HUD visual, microinterações e animações otimizadas.
+- Update log flutuante no canto inferior.
+- Dashboard com métricas e gráficos reais.
+- Layout responsivo e suporte a `prefers-reduced-motion`.
+
+## Módulos concluídos
+
+- Dashboard executivo com headcount, vagas, onboarding, treinamentos, aniversários e entrevistas.
+- Funcionários, departamentos e organograma recursivo.
+- Templates, jornadas e tarefas de onboarding.
+- Ciclos, perguntas, avaliações 360° e resumo por Gemini.
+- Turnos, escalas, calendário, folgas e férias.
+- ATS com vagas, candidatos, currículos, Kanban, match por IA e entrevistas.
+- Treinamentos, matrículas, validade e certificados.
+- Upload privado pelo Supabase Storage.
+- Perfil, identidade visual, acesso e assinatura automática.
 
 ## Stack
 
 - Next.js 16 App Router, React 19 e TypeScript
-- Tailwind CSS
+- Tailwind CSS e CSS otimizado
 - Supabase Postgres + Storage
-- Google Gemini Flash
+- Google Gemini
 - Recharts
-- React Hook Form + Zod
 - Vercel
 
-## 1. Configurar o banco Supabase
+## 1. Preparar o Supabase
 
-O projeto Supabase precisa receber a migration antes do primeiro uso. A Service Role permite CRUD, mas não permite criar tabelas.
+Antes de usar o perfil v2, aplique o schema atualizado:
 
-### Opção A — SQL Editor
-
-1. Abra **Supabase Dashboard → SQL Editor → New query**.
+1. Acesse **Supabase Dashboard → SQL Editor → New query**.
 2. Cole todo o conteúdo de `supabase/schema.sql`.
 3. Clique em **Run**.
-4. Execute `supabase/verify.sql`. Todas as consultas devem funcionar.
+4. Execute `supabase/verify.sql` para validar.
 
-### Opção B — Supabase CLI
+Para um banco que já recebeu a versão 1.0, também é possível executar apenas:
 
-```bash
-npx supabase login
-npx supabase link --project-ref bniayecyhtxtqcjsqvvk
-npx supabase db push
+```text
+supabase/migrations/20260716000000_dm_system_recruit_v2.sql
 ```
 
-A migration oficial está em `supabase/migrations/20260715000000_dm_system_recruit_v1.sql`.
-
-O schema cria 18 tabelas relacionais, índices, triggers de `updated_at`, RLS e o bucket privado `hr-files`.
+O schema é idempotente: pode ser executado novamente sem apagar registros.
 
 ## 2. Variáveis de ambiente
 
-Copie `.env.example` para `.env.local`:
+Copie o modelo:
 
 ```bash
 cp .env.example .env.local
 ```
 
-Preencha:
+Preencha localmente e também no painel da Vercel:
 
 ```env
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 GEMINI_API_KEY=
-APP_PASSWORD=
+APP_PASSWORD=123456
+APP_LOGIN_EMAIL=dmmsb19@gmail.com
 ```
 
-Nunca envie `.env.local` ao Git. Troque a Service Role e a chave Gemini caso tenham sido compartilhadas fora de um cofre seguro. Use uma senha forte em produção.
+`SUPABASE_SERVICE_ROLE_KEY`, `GEMINI_API_KEY` e `APP_PASSWORD` são segredos de servidor. Nunca use o prefixo `NEXT_PUBLIC_` neles e nunca envie `.env.local` ao Git.
 
-## 3. Executar localmente
+## 3. Executar e validar
 
 ```bash
 npm install
 npm run dev
 ```
 
-Acesse `http://localhost:3000`.
-
-Validações de produção:
+Validação de produção:
 
 ```bash
 npm run lint
@@ -88,7 +92,20 @@ npm run build
 npm start
 ```
 
-## 4. Publicar pelo CMD na Vercel
+Acesse `http://localhost:3000` e entre com o e-mail autorizado ou a senha.
+
+## 4. Hospedar direto na Vercel
+
+### Opção A — importar o ZIP baixado
+
+1. Extraia o ZIP.
+2. Envie os arquivos para um repositório GitHub privado.
+3. Na Vercel, clique em **Add New → Project** e importe o repositório.
+4. Framework: **Next.js** (detectado automaticamente).
+5. Em **Environment Variables**, cadastre as seis variáveis da seção anterior.
+6. Clique em **Deploy**.
+
+### Opção B — Vercel CLI
 
 ```bash
 npm install -g vercel
@@ -96,7 +113,7 @@ vercel login
 vercel
 ```
 
-Adicione as cinco variáveis no painel do projeto ou pelo CLI:
+Cadastre as variáveis:
 
 ```bash
 vercel env add NEXT_PUBLIC_SUPABASE_URL
@@ -104,55 +121,52 @@ vercel env add NEXT_PUBLIC_SUPABASE_ANON_KEY
 vercel env add SUPABASE_SERVICE_ROLE_KEY
 vercel env add GEMINI_API_KEY
 vercel env add APP_PASSWORD
+vercel env add APP_LOGIN_EMAIL
 ```
 
-Publicação de produção:
+Publicação final:
 
 ```bash
 vercel --prod
 ```
 
-## Rotas funcionais
+O arquivo `vercel.json` já configura o build Next.js.
+
+## Rotas
 
 | URI | Função |
 | --- | --- |
-| `/` | Dashboard |
+| `/` | Dashboard executivo |
 | `/employees` | Funcionários, departamentos e organograma |
 | `/onboarding` | Templates, jornadas e checklists |
-| `/performance` | Ciclos, perguntas, avaliações e IA |
-| `/attendance` | Escalas, calendário, férias e folgas |
+| `/performance` | Ciclos, avaliações e IA |
+| `/attendance` | Escalas, calendário e ausências |
 | `/recruitment` | ATS, vagas, candidatos e entrevistas |
 | `/training` | Treinamentos e certificados |
-| `/login` | Portão de senha única |
-| `/api/data/[resource]` | CRUD server-side com lista branca |
-| `/api/dashboard` | Métricas reais do dashboard |
-| `/api/upload` | Upload privado ao Supabase Storage |
-| `/api/files/[...path]` | Entrega autenticada de arquivo privado |
-| `/api/ai/resume` | Resumo e match de currículo |
+| `/profile` | Perfil, marca, acesso e assinatura |
+| `/login` | Acesso por e-mail exclusivo ou senha |
+| `/api/profile` | Preferências persistidas do perfil |
+| `/api/data/[resource]` | CRUD protegido server-side |
+| `/api/dashboard` | Métricas reais |
+| `/api/upload` | Upload privado |
+| `/api/ai/resume` | Match de currículo |
 | `/api/ai/review` | Resumo de avaliação 360° |
 
-## Modelo de dados
+## Segurança
 
-- `departments`, `employees`
-- `onboarding_templates`, `onboarding_template_tasks`, `onboardings`, `onboarding_tasks`
-- `review_cycles`, `review_questions`, `reviews`
-- `shifts`, `shift_assignments`, `leave_requests`
-- `jobs`, `candidates`, `applications`, `interviews`
-- `trainings`, `training_enrollments`
+- Cookie de sessão `HttpOnly`, `SameSite=Lax`, `Secure` em produção e validade de 12 horas.
+- Service Role e Gemini usados apenas no servidor.
+- RLS habilitado nas tabelas; navegador não acessa dados diretamente.
+- Uploads guardados em bucket privado e servidos por rota autenticada.
+- Lista branca de tabelas e campos em todas as operações CRUD.
+- Arquivos de ambiente, builds e dependências são excluídos do pacote e do Git.
 
-Todos usam UUID e timestamps de criação/atualização. O navegador nunca recebe a Service Role; todas as operações passam por Route Handlers protegidos.
+> Recomendação: como credenciais foram compartilhadas durante a configuração, rotacione a Service Role e a chave Gemini antes do deploy público e atualize os valores na Vercel.
 
 ## Status
 
-- Aplicação: **Versão 1.0 funcional**
+- Aplicação: **2.0.0-beta.1**
+- TypeScript: validado
 - Build de produção: validado
 - Deploy alvo: Vercel
-- Banco: Supabase `bniayecyhtxtqcjsqvvk` — schema aplicado e CRUD validado
-- Storage: bucket privado `hr-files` criado e upload validado
-- IA: Gemini 3.1 Flash Lite validado
-- Dados fake: nenhum
-
-## Próximos passos recomendados
-
-- Rotacionar as credenciais antes da publicação final.
-- Configurar domínio próprio e monitoramento de erros no Vercel.
+- Dados fictícios: nenhum

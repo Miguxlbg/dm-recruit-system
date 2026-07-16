@@ -4,5 +4,5 @@ import './globals.css'
 import { Providers } from '@/components/providers'
 
 const inter = Inter({ subsets:['latin'], display:'swap' })
-export const metadata: Metadata = { title:'DM System Recruit | Gestão de RH', description:'Sistema interno completo de recrutamento e gestão de pessoas' }
+export const metadata: Metadata = { title:'DM System Recruit 2.0 Beta | Gestão de RH', description:'Cockpit completo de recrutamento, gestão de pessoas e performance' }
 export default function RootLayout({children}:{children:React.ReactNode}) { return <html lang="pt-BR" suppressHydrationWarning><body className={inter.className}><Providers>{children}</Providers></body></html> }
