@@ -8,6 +8,7 @@ import { Bell, BriefcaseBusiness, CalendarDays, CheckCircle2, ChevronDown, Clipb
 import { Dashboard } from './dashboard'
 import { ModuleView } from './module-view'
 import { ProfileView } from './profile-view'
+import { GuidedTour } from './guided-tour'
 import { cn } from '@/lib/utils'
 import { defaultProfile, type Profile } from '@/lib/profile'
 
@@ -70,7 +71,7 @@ export function AppShell({ section }: { section: string }) {
         <button className="mobile-close" onClick={() => setOpen(false)} aria-label="Fechar menu"><X/></button>
       </div>
       <p className="nav-label">{lang === 'pt' ? 'ESPAÇO DE TRABALHO' : 'WORKSPACE'}</p>
-      <nav>{nav.map(([slug, Icon, pt, en]) => <Link key={slug} href={slug === 'dashboard' ? '/' : `/${slug}`} className={cn('nav-item', section === slug && 'active')} onClick={() => setOpen(false)}><Icon/><span>{lang === 'pt' ? pt : en}</span>{slug === 'recruitment' && <i className="nav-live"/>}</Link>)}</nav>
+      <nav>{nav.map(([slug, Icon, pt, en]) => <Link key={slug} href={slug === 'dashboard' ? '/' : `/${slug}`} data-tour={`nav-${slug}`} className={cn('nav-item', section === slug && 'active')} onClick={() => setOpen(false)}><Icon/><span>{lang === 'pt' ? pt : en}</span>{slug === 'recruitment' && <i className="nav-live"/>}</Link>)}</nav>
       <div className="sidebar-foot">
         <button className="upgrade-card" onClick={() => setReleaseOpen(true)}><span><Sparkles/></span><div><small>VERSÃO ATUAL</small><strong>2.0 Beta</strong><p>{lang === 'pt' ? 'Ver novidades' : 'See what is new'}</p></div><Rocket/></button>
         <button onClick={logout} className="logout"><LogOut/>{lang === 'pt' ? 'Encerrar sessão' : 'Sign out'}</button>
@@ -82,12 +83,12 @@ export function AppShell({ section }: { section: string }) {
       <header className="topbar">
         <div className="title-wrap"><button className="menu-button" onClick={() => setOpen(true)} aria-label="Abrir menu"><Menu/></button><div><span>{lang === 'pt' ? 'WORKSPACE / VISÃO GERAL' : 'WORKSPACE / OVERVIEW'}</span><h1>{title}</h1></div></div>
         <div className="top-actions">
-          <label className="search"><Search/><input value={query} onChange={event => setQuery(event.target.value)} placeholder={lang === 'pt' ? 'Buscar nesta página…' : 'Search this page…'}/><kbd>⌘ K</kbd></label>
+          <label className="search" data-tour="global-search"><Search/><input value={query} onChange={event => setQuery(event.target.value)} placeholder={lang === 'pt' ? 'Buscar nesta página…' : 'Search this page…'}/><kbd>⌘ K</kbd></label>
           <button onClick={toggleLang} title="Language"><Languages/><span>{lang.toUpperCase()}</span></button>
           <button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} title="Theme">{theme === 'dark' ? <Sun/> : <Moon/>}</button>
           <button className="notification" title="Notifications" onClick={() => setReleaseOpen(true)}><Bell/><i>1</i></button>
           <div className="profile-control">
-            <button className="profile-trigger" onClick={() => setProfileMenu(value => !value)} aria-expanded={profileMenu}>
+            <button className="profile-trigger" data-tour="profile-trigger" onClick={() => setProfileMenu(value => !value)} aria-expanded={profileMenu}>
               <span className="user-avatar">{profile.avatar_url ? <img src={profile.avatar_url} alt=""/> : initials}</span>
               <span><strong>{profile.display_name}</strong><small>{profile.job_title}</small></span><ChevronDown/>
             </button>
@@ -105,6 +106,7 @@ export function AppShell({ section }: { section: string }) {
     </section>
 
     <button className="release-fab" onClick={() => setReleaseOpen(true)}><span><History/></span><div><small>UPDATE LOG</small><strong>v2.0 Beta</strong></div><i/></button>
+    <GuidedTour lang={lang}/>
     {releaseOpen && <div className="release-overlay" onMouseDown={event => event.target === event.currentTarget && setReleaseOpen(false)}><aside className="release-panel"><header><div><span><Rocket/> RELEASE NOTES</span><h2>DM Recruit 2.0 Beta</h2><p>16 de julho de 2026</p></div><button onClick={() => setReleaseOpen(false)}><X/></button></header><div className="release-body"><section className="release-feature"><Sparkles/><div><b>NOVA EXPERIÊNCIA</b><h3>Seu workspace evoluiu.</h3><p>Interface refinada, mais contexto visual, animações otimizadas e navegação mais clara.</p></div></section>{['Login por e-mail exclusivo ou senha','Perfil profissional 100% personalizável','Foto e logotipo por upload ou URL','Tema, idioma, fuso e cor de destaque','Assinatura automática pronta para exportar','Dashboard e HUD visual aprimorados'].map(item => <p className="release-item" key={item}><CheckCircle2/>{item}</p>)}</div></aside></div>}
   </div>
 }
