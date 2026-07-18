@@ -12,3 +12,4 @@ union all select 'training_enrollments', count(*) from public.training_enrollmen
 
 select id, name, public, file_size_limit from storage.buckets where id = 'hr-files';
 select id, display_name, login_email, theme, language from public.app_profile;
+select id, job_id, portal, status from public.job_publications;

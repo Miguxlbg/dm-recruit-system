@@ -11,7 +11,7 @@ export const resources = {
   shifts: ['name','start_time','end_time','color'],
   shift_assignments: ['employee_id','shift_id','shift_date','notes'],
   leave_requests: ['employee_id','leave_type','start_date','end_date','reason','status'],
-  jobs: ['title','description','department_id','status'],
+  jobs: ['title','description','requirements','location','employment_type','work_model','salary_range','department_id','status'],
   candidates: ['name','email','phone','resume_url','resume_path','ai_summary'],
   applications: ['candidate_id','job_id','stage','match_score','match_reason','notes'],
   interviews: ['application_id','scheduled_at','interviewer_id','meeting_link','notes','status'],
