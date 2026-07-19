@@ -243,6 +243,22 @@ button.primary:hover, .entity-actions button.primary:hover { transform: translat
 .ai-controls button { display: flex; align-items: center; gap: 6px; padding: 10px 15px; color: #fff; border: 0; border-radius: 999px; background: var(--accent); font-size: 10px; font-weight: 700; }
 .ai-controls button svg { width: 14px; }
 .ai-result { padding: 14px; white-space: pre-wrap; line-height: 1.65; color: var(--muted); border-radius: 12px; background: var(--card-2); font-size: 11px; }
+.review-setup { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; margin-top: 16px; }
+.review-setup select,.batch-grid select,.batch-grid input { min-width: 0; padding: 10px; color: var(--ink); border: 1px solid var(--line); border-radius: 11px; outline: 0; background: var(--card-2); font-size: 9px; }
+.review-questions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 13px; }
+.review-questions > label { display: flex; flex-direction: column; gap: 9px; padding: 13px; border: 1px solid var(--line); border-radius: 13px; background: var(--card-2); }
+.review-questions > label > span { display: flex; align-items: flex-start; gap: 8px; line-height: 1.45; font-size: 9px; font-weight: 700; }
+.review-questions > label > span b { width: 19px; height: 19px; display: grid; place-items: center; flex: none; color: var(--accent); border-radius: 6px; background: var(--accent-soft); font-size: 7px; }
+.review-questions textarea { width: 100%; resize: vertical; padding: 9px; color: var(--ink); border: 1px solid var(--line); border-radius: 9px; outline: 0; background: var(--card); font-size: 9px; }
+.rating-scale { display: grid; grid-template-columns: repeat(5,1fr); gap: 5px; }
+.rating-scale button { height: 32px; color: var(--muted); border: 1px solid var(--line); border-radius: 8px; background: var(--card); font-size: 9px; font-weight: 800; }
+.rating-scale button.active { color: #fff; border-color: var(--accent); background: var(--accent); box-shadow: 0 7px 15px rgba(var(--accent-rgb),.2); }
+.review-empty { padding: 15px; text-align: center; color: var(--muted); border-radius: 12px; background: var(--card-2); font-size: 9px; }
+.review-submit { display: flex; align-items: center; justify-content: flex-end; gap: 12px; margin-top: 13px; }
+.review-submit span { flex: 1; color: var(--green); font-size: 9px; }
+.review-submit button,.batch-grid button { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 14px; color: #fff; border: 0; border-radius: 999px; background: var(--accent); font-size: 9px; font-weight: 750; }
+.review-submit svg,.batch-grid svg { width: 14px; }
+.batch-grid { display: grid; grid-template-columns: 1.2fr 1.2fr 1fr 1fr auto; gap: 8px; margin-top: 15px; }
 .scheduler-grid { display: grid; grid-template-columns: 1.3fr 1fr 1fr 1.2fr auto auto; gap: 8px; margin-top: 15px; }
 .scheduler-grid a, .scheduler-grid button { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 13px; white-space: nowrap; text-decoration: none; border: 0; border-radius: 999px; font-size: 9px; font-weight: 700; }
 .scheduler-grid a { color: var(--accent); background: var(--accent-soft); }
