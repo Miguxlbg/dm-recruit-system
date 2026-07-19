@@ -258,7 +258,18 @@ button.primary:hover, .entity-actions button.primary:hover { transform: translat
 .kanban { margin-bottom: 17px; padding: 20px; border-radius: 20px; }
 .kanban > header { display: flex; align-items: center; justify-content: space-between; }
 .kanban > header h2 { margin: 5px 0 0; font-size: 16px; }
+.kanban > header p { margin: 4px 0 0; color: var(--muted); font-size: 9px; }
 .kanban > header > svg { width: 22px; color: var(--accent); }
+.ats-insight { display: grid; grid-template-columns: 42px 1fr 28px; align-items: start; gap: 11px; margin-top: 16px; padding: 14px; color: var(--ink); border: 1px solid rgba(var(--accent-rgb),.18); border-radius: 15px; background: linear-gradient(135deg,var(--accent-soft),transparent); animation: slide-up .22s ease; }
+.ats-insight > span { width: 42px; height: 42px; display: grid; place-items: center; color: var(--accent); border-radius: 13px; background: var(--card); box-shadow: 0 8px 20px rgba(var(--accent-rgb),.1); }
+.ats-insight svg { width: 17px; }
+.ats-insight small { color: var(--accent); font-size: 7px; font-weight: 850; letter-spacing: .14em; }
+.ats-insight h3 { display: flex; align-items: center; gap: 8px; margin: 4px 0; font-size: 11px; }
+.ats-insight h3 b { padding: 4px 7px; color: #fff; border-radius: 999px; background: var(--accent); font-size: 8px; }
+.ats-insight p { margin: 0; color: var(--muted); line-height: 1.55; font-size: 9px; }
+.ats-insight > button { width: 28px; height: 28px; color: var(--muted); border: 0; border-radius: 8px; background: var(--card-2); }
+.ats-insight.error { border-color: rgba(229,72,110,.18); background: rgba(229,72,110,.06); }
+.ats-insight.error > span,.ats-insight.error small { color: #e5486e; }
 .kanban-scroll { display: grid; grid-template-columns: repeat(5,minmax(180px,1fr)); gap: 10px; margin-top: 17px; overflow: auto; }
 .kanban-column { min-height: 160px; padding: 10px; border-radius: 14px; background: var(--card-2); }
 .kanban-column h3 { display: flex; align-items: center; gap: 6px; margin: 0 0 10px; color: var(--muted); font-size: 9px; text-transform: uppercase; }

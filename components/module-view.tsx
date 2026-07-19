@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { EntityManager, type EntityConfig } from './entity-manager'
 import { PublicationHub } from './publication-hub'
 import { Building2, Network, Sparkles, Video, Loader2, ArrowRight } from 'lucide-react'
@@ -27,7 +27,42 @@ const configs:Record<string,EntityConfig>={
 }
 const sections:Record<string,string[]>={employees:['employees','departments'],onboarding:['onboardings','onboarding_tasks','onboarding_templates','onboarding_template_tasks'],performance:['review_cycles','review_questions','reviews'],attendance:['shift_assignments','leave_requests','shifts'],recruitment:['publications','applications','jobs','candidates','interviews'],training:['training_enrollments','trainings']}
 export function ModuleView({section,lang,search}:{section:string,lang:'pt'|'en',search:string}){const tabs=sections[section]||sections.employees;const [tab,setTab]=useState(tabs[0]);useEffect(()=>setTab(tabs[0]),[section]);const pt=lang==='pt';const tabName=(item:string)=>item==='publications'?(pt?'Publicar em portais':'Publish to portals'):(pt?configs[item].titlePt:configs[item].titleEn);return <div className="module-page">{section==='recruitment'&&<div className="meet-banner"><div><Video/><span><strong>{pt?'Agenda inteligente de entrevistas':'Smart interview scheduling'}</strong><small>{pt?'Crie a sala e registre a entrevista em um único fluxo.':'Create the room and save the interview in one flow.'}</small></span></div><a href="https://meet.google.com/new" target="_blank">{pt?'Nova reunião':'New meeting'}<ArrowRight/></a></div>}<nav className="tabs" data-tour={section==='recruitment'?'recruitment-tabs':undefined} aria-label="Module sections">{tabs.map(item=><button key={item} onClick={()=>setTab(item)} className={tab===item?'active':''}>{tabName(item)}</button>)}</nav>{tab==='employees'&&<OrgSnapshot lang={lang}/>} {tab==='reviews'&&<ReviewAi lang={lang}/>} {tab==='shift_assignments'&&<MonthCalendar lang={lang}/>} {tab==='interviews'&&<InterviewScheduler lang={lang}/>} {tab==='publications'?<PublicationHub lang={lang} onEditJob={()=>setTab('jobs')}/>:tab==='applications'?<><ApplicationKanban lang={lang}/><EntityManager config={configs[tab]} lang={lang} globalSearch={search}/></>:<EntityManager config={configs[tab]} lang={lang} globalSearch={search}/>}</div>}
-function ApplicationKanban({lang}:{lang:'pt'|'en'}){const [rows,setRows]=useState<any[]>([]);const [people,setPeople]=useState<any[]>([]);const [jobs,setJobs]=useState<any[]>([]);const [busy,setBusy]=useState('');const stages=['screening','interview','offer','hired','rejected'];const pt=lang==='pt';const load=()=>Promise.all(['applications','candidates','jobs'].map(r=>fetch(`/api/data/${r}?_=${Date.now()}`,{cache:'no-store'}).then(x=>x.ok?x.json():[]))).then(([a,c,j])=>{setRows(a);setPeople(c);setJobs(j)});useEffect(()=>{load()},[]);async function move(id:string,stage:string){setBusy(id);await fetch('/api/data/applications',{method:'PATCH',headers:{'content-type':'application/json'},body:JSON.stringify({id,stage})});await load();setBusy('')}async function analyze(id:string){setBusy(id);const r=await fetch('/api/ai/resume',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({applicationId:id})});const b=await r.json();if(!r.ok)alert(b.error);else alert(`${pt?'Score':'Score'}: ${b.score}/100\n${b.summary}`);await load();setBusy('')}return <section className="kanban"><header><div><span>SMART ATS</span><h2>{pt?'Visão rápida do pipeline':'Pipeline overview'}</h2></div><Sparkles/></header><div className="kanban-scroll">{stages.map(stage=><div className="kanban-column" key={stage}><h3><i/>{status([stage])[0][pt?'labelPt':'labelEn']}<b>{rows.filter(r=>r.stage===stage).length}</b></h3>{rows.filter(r=>r.stage===stage).map(row=><article key={row.id}><strong>{people.find(p=>p.id===row.candidate_id)?.name||'—'}</strong><small>{jobs.find(j=>j.id===row.job_id)?.title||'—'}</small>{row.match_score!=null&&<span className="score">{row.match_score}% match</span>}<footer><select value={row.stage} disabled={busy===row.id} onChange={e=>move(row.id,e.target.value)}>{stages.map(s=><option key={s} value={s}>{s}</option>)}</select><button disabled={busy===row.id} onClick={()=>analyze(row.id)}>{busy===row.id?<Loader2 className="spin"/>:<Sparkles/>}{pt?'Analisar IA':'AI analyze'}</button></footer></article>)}</div>)}</div></section>}
+function ApplicationKanban({ lang }: { lang: 'pt'|'en' }) {
+  const [rows, setRows] = useState<any[]>([])
+  const [people, setPeople] = useState<any[]>([])
+  const [jobs, setJobs] = useState<any[]>([])
+  const [busy, setBusy] = useState('')
+  const [insight, setInsight] = useState<{ name: string, score?: number, summary: string, error?: boolean } | null>(null)
+  const stages = ['screening','interview','offer','hired','rejected']
+  const pt = lang === 'pt'
+  const load = () => Promise.all(['applications','candidates','jobs'].map(resource => fetch(`/api/data/${resource}?_=${Date.now()}`, { cache: 'no-store' }).then(response => response.ok ? response.json() : []))).then(([applications,candidates,openJobs]) => { setRows(applications); setPeople(candidates); setJobs(openJobs) })
+  useEffect(() => { void load() }, [])
+
+  async function move(id: string, stage: string) {
+    setBusy(id)
+    setInsight(null)
+    const response = await fetch('/api/data/applications', { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id, stage }) })
+    if (!response.ok) setInsight({ name: pt ? 'Falha ao mover candidatura' : 'Could not move application', summary: (await response.json()).error, error: true })
+    await load()
+    setBusy('')
+  }
+
+  async function analyze(row: any) {
+    setBusy(row.id)
+    setInsight(null)
+    const response = await fetch('/api/ai/resume', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ applicationId: row.id }) })
+    const body = await response.json()
+    const name = people.find(person => person.id === row.candidate_id)?.name || (pt ? 'Candidato' : 'Candidate')
+    setInsight(response.ok ? { name, score: body.score, summary: body.summary } : { name, summary: body.error, error: true })
+    await load()
+    setBusy('')
+  }
+
+  return <section className="kanban"><header><div><span>SMART ATS</span><h2>{pt ? 'Pipeline inteligente de talentos' : 'Smart talent pipeline'}</h2><p>{pt ? 'Avance etapas e compare currículos sem sair do fluxo.' : 'Move stages and compare resumes without leaving the flow.'}</p></div><Sparkles/></header>
+    {insight && <div className={`ats-insight${insight.error ? ' error' : ''}`}><span><Sparkles/></span><div><small>{insight.error ? (pt ? 'ATENÇÃO' : 'NOTICE') : 'GEMINI MATCH'}</small><h3>{insight.name}{insight.score != null && <b>{insight.score}/100</b>}</h3><p>{insight.summary}</p></div><button onClick={() => setInsight(null)}>×</button></div>}
+    <div className="kanban-scroll">{stages.map(stage => <div className="kanban-column" key={stage}><h3><i/>{status([stage])[0][pt ? 'labelPt' : 'labelEn']}<b>{rows.filter(row => row.stage === stage).length}</b></h3>{rows.filter(row => row.stage === stage).map(row => <article key={row.id}><strong>{people.find(person => person.id === row.candidate_id)?.name || '—'}</strong><small>{jobs.find(job => job.id === row.job_id)?.title || '—'}</small>{row.match_score != null && <span className="score">{row.match_score}% match</span>}<footer><select value={row.stage} disabled={busy === row.id} onChange={event => move(row.id,event.target.value)}>{stages.map(value => <option key={value} value={value}>{status([value])[0][pt ? 'labelPt' : 'labelEn']}</option>)}</select><button disabled={busy === row.id} onClick={() => analyze(row)}>{busy === row.id ? <Loader2 className="spin"/> : <Sparkles/>}{pt ? 'Match IA' : 'AI match'}</button></footer></article>)}</div>)}</div>
+  </section>
+}
 
 function OrgSnapshot({lang}:{lang:'pt'|'en'}){const [rows,setRows]=useState<any[]>([]);useEffect(()=>{fetch(`/api/data/employees?_=${Date.now()}`,{cache:'no-store'}).then(r=>r.ok?r.json():[]).then(setRows)},[]);const roots=rows.filter(x=>!x.manager_id||!rows.some(y=>y.id===x.manager_id));const pt=lang==='pt';function Node({person,depth=0}:{person:any,depth?:number}){const children=rows.filter(x=>x.manager_id===person.id);return <div className="org-node" style={{marginLeft:depth*22}}><span>{person.name}</span><small>{person.job_title}</small>{children.map(c=><Node key={c.id} person={c} depth={depth+1}/>)}</div>}if(!rows.length)return null;return <section className="insight-card"><header><Network/><div><span>{pt?'ESTRUTURA':'STRUCTURE'}</span><h2>{pt?'Organograma':'Organization chart'}</h2></div></header><div className="org-tree">{roots.map(r=><Node key={r.id} person={r}/>)}</div></section>}
 
