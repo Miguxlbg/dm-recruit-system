@@ -85,6 +85,17 @@ export function GuidedTour({ lang }: { lang: 'pt'|'en' }) {
     router.push('/')
   }
 
+  async function returnToLauncher() {
+    setLoading(true)
+    if (records.length) await fetch('/api/tutorial', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'cleanup', records }) })
+    setRecords([])
+    setActive(false)
+    setRect(null)
+    setStep(0)
+    setLauncher(true)
+    setLoading(false)
+  }
+
   function next() {
     if (step === steps.length - 1) void finish()
     else { setRect(null); setStep(value => value + 1) }
@@ -97,7 +108,7 @@ export function GuidedTour({ lang }: { lang: 'pt'|'en' }) {
     {active && <div className="tour-layer">
       {rect && <><div className="tour-shade top" style={{ height: Math.max(0, rect.top - 8) }}/><div className="tour-shade left" style={{ top: Math.max(0, rect.top - 8), width: Math.max(0, rect.left - 8), height: rect.height + 16 }}/><div className="tour-shade right" style={{ top: Math.max(0, rect.top - 8), left: rect.right + 8, height: rect.height + 16 }}/><div className="tour-shade bottom" style={{ top: rect.bottom + 8 }}/><div className="tour-focus" style={{ top: rect.top - 8, left: rect.left - 8, width: rect.width + 16, height: rect.height + 16 }}/></>}
       {!rect && <div className="tour-shade full"><Loader2 className="spin"/></div>}
-      <section className="tour-tooltip" style={rect ? { top: Math.min(window.innerHeight - 310, Math.max(18, rect.bottom + 18)), left: Math.min(window.innerWidth - 390, Math.max(18, rect.left)) } : undefined}><header><span>PASSO {step + 1} DE {steps.length}</span><button onClick={finish}><X/></button></header><div className="tour-progress"><i style={{ width: `${((step + 1) / steps.length) * 100}%` }}/></div><h3>{steps[step].title}</h3><p>{steps[step].description}</p><aside><Sparkles/><span>{steps[step].tip}</span></aside><footer><button onClick={() => step ? setStep(value => value - 1) : setLauncher(true)}><RotateCcw/>{pt ? 'Voltar' : 'Back'}</button><button onClick={next}>{loading ? <Loader2 className="spin"/> : step === steps.length - 1 ? <Trash2/> : <Check/>}{step === steps.length - 1 ? (pt ? 'Concluir e limpar testes' : 'Finish and clean up') : (pt ? 'Entendi, continuar' : 'Got it, continue')}</button></footer></section>
+      <section className="tour-tooltip" style={rect ? { top: Math.min(window.innerHeight - 310, Math.max(18, rect.bottom + 18)), left: Math.min(window.innerWidth - 390, Math.max(18, rect.left)) } : undefined}><header><span>PASSO {step + 1} DE {steps.length}</span><button onClick={finish}><X/></button></header><div className="tour-progress"><i style={{ width: `${((step + 1) / steps.length) * 100}%` }}/></div><h3>{steps[step].title}</h3><p>{steps[step].description}</p><aside><Sparkles/><span>{steps[step].tip}</span></aside><footer><button onClick={() => step ? setStep(value => value - 1) : void returnToLauncher()}><RotateCcw/>{pt ? 'Voltar' : 'Back'}</button><button onClick={next}>{loading ? <Loader2 className="spin"/> : step === steps.length - 1 ? <Trash2/> : <Check/>}{step === steps.length - 1 ? (pt ? 'Concluir e limpar testes' : 'Finish and clean up') : (pt ? 'Entendi, continuar' : 'Got it, continue')}</button></footer></section>
     </div>}
   </>
 }

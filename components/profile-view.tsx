@@ -2,17 +2,14 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTheme } from 'next-themes'
-import { Check, Clipboard, Download, ExternalLink, ImagePlus, KeyRound, Loader2, Mail, Palette, Save, ShieldCheck, Sparkles, UploadCloud, UserRound } from 'lucide-react'
+import { BookOpen, Camera, Check, Clipboard, Download, ExternalLink, Globe2, ImagePlus, KeyRound, Loader2, Mail, MonitorSmartphone, Palette, Save, ShieldCheck, Sparkles, UploadCloud, UserRound } from 'lucide-react'
 import { buildSignature, defaultProfile, type Profile } from '@/lib/profile'
 import { initials } from '@/lib/utils'
-
-type Tab = 'identity' | 'brand' | 'access' | 'signature'
 
 export function ProfileView({ lang, onProfileChange }: { lang: 'pt' | 'en', onProfileChange?: (profile: Profile) => void }) {
   const pt = lang === 'pt'
   const { setTheme } = useTheme()
   const [profile, setProfile] = useState<Profile>(defaultProfile)
-  const [tab, setTab] = useState<Tab>('identity')
   const [newPassword, setNewPassword] = useState('')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -87,78 +84,60 @@ export function ProfileView({ lang, onProfileChange }: { lang: 'pt' | 'en', onPr
     URL.revokeObjectURL(url)
   }
 
-  if (loading) return <div className="page-state"><Loader2 className="spin"/><h2>{pt ? 'Preparando seu perfil…' : 'Preparing your profile…'}</h2></div>
+  if (loading) return <div className="page-state"><Loader2 className="spin"/><h2>{pt ? 'Preparando seu profile studio…' : 'Preparing your profile studio…'}</h2></div>
 
-  const tabs: { id: Tab, label: string, icon: typeof UserRound }[] = [
-    { id: 'identity', label: pt ? 'Identidade' : 'Identity', icon: UserRound },
-    { id: 'brand', label: pt ? 'Marca & aparência' : 'Brand & appearance', icon: Palette },
-    { id: 'access', label: pt ? 'Acesso' : 'Access', icon: KeyRound },
-    { id: 'signature', label: pt ? 'Assinatura' : 'Signature', icon: Mail },
-  ]
+  const completionFields = [profile.display_name, profile.job_title, profile.professional_email, profile.phone, profile.bio, profile.avatar_url, profile.logo_url, profile.linkedin_url]
+  const completion = Math.round(completionFields.filter(Boolean).length / completionFields.length * 100)
+  const startTutorial = () => window.dispatchEvent(new CustomEvent('dm:start-tutorial'))
 
-  return <div className="profile-page">
-    <section className="profile-hero">
-      <div className="profile-cover-grid"/>
-      <div className="profile-avatar-xl">{profile.avatar_url ? <img src={profile.avatar_url} alt=""/> : initials(profile.display_name)}</div>
-      <div><span><Sparkles/> PERFIL DO WORKSPACE</span><h2>{profile.display_name}</h2><p>{profile.job_title}</p></div>
-      <button className="primary" onClick={save} disabled={saving}>{saving ? <Loader2 className="spin"/> : <Save/>}{pt ? 'Salvar alterações' : 'Save changes'}</button>
+  return <div className="profile-page profile-studio-v2" data-tour="profile-studio">
+    <section className="profile-command">
+      <div className="profile-command-copy"><span><Sparkles/> IDENTITY CONTROL CENTER</span><h2>{pt ? 'Seu perfil, marca e acesso em um só lugar' : 'Your profile, brand and access in one place'}</h2><p>{pt ? 'Edite com contexto, acompanhe a completude e veja o resultado antes de salvar.' : 'Edit with context, track completeness and preview the result before saving.'}</p></div>
+      <div className="profile-completion"><div><b>{completion}%</b><span>{pt ? 'perfil completo' : 'profile complete'}</span></div><i><b style={{ width: `${completion}%` }}/></i></div>
+      <button className="primary" onClick={save} disabled={saving}>{saving ? <Loader2 className="spin"/> : <Save/>}{pt ? 'Salvar tudo' : 'Save all'}</button>
     </section>
 
-    <div className="profile-layout">
-      <aside className="profile-tabs">{tabs.map(item => <button key={item.id} className={tab === item.id ? 'active' : ''} onClick={() => setTab(item.id)}><item.icon/><span>{item.label}</span></button>)}</aside>
-      <section className="profile-editor">
-        {message && <div className="success-banner"><Check/>{message}</div>}
-        {error && <div className="error-banner"><span>{error}</span></div>}
+    {message && <div className="success-banner"><Check/>{message}</div>}
+    {error && <div className="error-banner"><span>{error}</span></div>}
 
-        {tab === 'identity' && <>
-          <EditorTitle eyebrow="IDENTIDADE PROFISSIONAL" title={pt ? 'Como você aparece no sistema' : 'How you appear in the system'} description={pt ? 'Esses dados personalizam o workspace e todas as comunicações.' : 'These details personalize your workspace and communications.'}/>
-          <div className="media-upload-row">
-            <div className="profile-avatar-preview">{profile.avatar_url ? <img src={profile.avatar_url} alt=""/> : initials(profile.display_name)}</div>
-            <div><strong>{pt ? 'Foto de perfil' : 'Profile photo'}</strong><p>PNG, JPG ou WEBP · máximo 10 MB</p><div className="inline-actions"><button onClick={() => avatarInput.current?.click()}><UploadCloud/>{uploading === 'avatar_url' ? 'Enviando…' : 'Upload'}</button><input ref={avatarInput} hidden type="file" accept="image/png,image/jpeg,image/webp" onChange={event => event.target.files?.[0] && upload(event.target.files[0], 'avatar_url')}/></div></div>
-          </div>
-          <div className="profile-form-grid">
-            <Field label={pt ? 'Nome de exibição' : 'Display name'} value={profile.display_name} onChange={value => update('display_name', value)}/>
-            <Field label={pt ? 'Cargo ou título' : 'Job title'} value={profile.job_title} onChange={value => update('job_title', value)}/>
-            <Field label="E-mail profissional" type="email" value={profile.professional_email} onChange={value => update('professional_email', value)}/>
-            <Field label={pt ? 'Telefone profissional' : 'Professional phone'} value={profile.phone} onChange={value => update('phone', value)}/>
-            <Field wide label={pt ? 'Bio curta / assinatura de mensagens' : 'Short bio'} value={profile.bio} onChange={value => update('bio', value)} textarea/>
-            <Field label="LinkedIn" type="url" value={profile.linkedin_url} onChange={value => update('linkedin_url', value)}/>
-            <Field label="Instagram" type="url" value={profile.instagram_url} onChange={value => update('instagram_url', value)}/>
-            <Field label="Website" type="url" value={profile.website_url} onChange={value => update('website_url', value)}/>
-          </div>
-        </>}
+    <div className="profile-studio-grid">
+      <aside className="profile-live-card">
+        <div className="profile-live-cover" style={{ background: `linear-gradient(135deg,#171a2a,${profile.accent_color})` }}><span>LIVE PREVIEW</span></div>
+        <button className="profile-live-avatar" onClick={() => avatarInput.current?.click()} aria-label={pt ? 'Alterar foto' : 'Change photo'}>{profile.avatar_url ? <img src={profile.avatar_url} alt=""/> : initials(profile.display_name)}<i><Camera/></i></button>
+        <input ref={avatarInput} hidden type="file" accept="image/png,image/jpeg,image/webp" onChange={event => event.target.files?.[0] && upload(event.target.files[0], 'avatar_url')}/>
+        <div className="profile-live-copy"><h3>{profile.display_name || (pt ? 'Seu nome' : 'Your name')}</h3><p>{profile.job_title || (pt ? 'Seu cargo' : 'Your role')}</p><span>{profile.bio || (pt ? 'Adicione uma bio para apresentar sua atuação profissional.' : 'Add a bio to introduce your professional work.')}</span></div>
+        <div className="profile-live-meta"><span><Mail/>{profile.professional_email || 'email@empresa.com'}</span><span><Globe2/>{profile.timezone}</span></div>
+        <nav className="profile-jump"><a href="#identity"><UserRound/>{pt ? 'Identidade' : 'Identity'}</a><a href="#brand"><Palette/>{pt ? 'Marca e aparência' : 'Brand'}</a><a href="#security"><ShieldCheck/>{pt ? 'Acesso seguro' : 'Security'}</a><a href="#signature"><Mail/>{pt ? 'Assinatura' : 'Signature'}</a></nav>
+      </aside>
 
-        {tab === 'brand' && <>
-          <EditorTitle eyebrow="BRAND STUDIO" title={pt ? 'Sua marca, seu workspace' : 'Your brand, your workspace'} description={pt ? 'Aplique identidade própria aos relatórios, propostas e interface.' : 'Apply your identity to reports, proposals and the interface.'}/>
-          <div className="brand-preview" style={{ '--preview-accent': profile.accent_color } as React.CSSProperties}><div>{profile.logo_url ? <img src={profile.logo_url} alt=""/> : <ImagePlus/>}<span><small>POWERED BY</small><strong>{profile.display_name}</strong></span></div><i/><i/><b>RELATÓRIO DE TALENTOS · 2.0</b></div>
-          <div className="profile-form-grid">
-            <Field label={pt ? 'URL do logotipo' : 'Logo URL'} type="url" value={profile.logo_url} onChange={value => update('logo_url', value)}/>
-            <label className="profile-field"><span>{pt ? 'Ou envie seu logotipo' : 'Or upload your logo'}</span><button className="upload-button" onClick={() => logoInput.current?.click()}><UploadCloud/>{uploading === 'logo_url' ? 'Enviando…' : 'Selecionar arquivo'}</button><input ref={logoInput} hidden type="file" accept="image/png,image/jpeg,image/webp" onChange={event => event.target.files?.[0] && upload(event.target.files[0], 'logo_url')}/></label>
-            <label className="profile-field color-field"><span>{pt ? 'Cor de destaque' : 'Accent color'}</span><div><input type="color" value={profile.accent_color} onChange={event => update('accent_color', event.target.value)}/><input value={profile.accent_color} onChange={event => update('accent_color', event.target.value)}/></div></label>
-            <label className="profile-field"><span>{pt ? 'Tema visual' : 'Visual theme'}</span><select value={profile.theme} onChange={event => update('theme', event.target.value as Profile['theme'])}><option value="light">Claro</option><option value="dark">Escuro</option><option value="system">Automático</option></select></label>
-            <label className="profile-field"><span>{pt ? 'Idioma da interface' : 'Interface language'}</span><select value={profile.language} onChange={event => update('language', event.target.value as Profile['language'])}><option value="pt">Português (Brasil)</option><option value="en">English</option></select></label>
-            <label className="profile-field"><span>{pt ? 'Fuso horário' : 'Timezone'}</span><select value={profile.timezone} onChange={event => update('timezone', event.target.value)}><option value="America/Sao_Paulo">Brasília · GMT-3</option><option value="America/Manaus">Manaus · GMT-4</option><option value="America/Rio_Branco">Rio Branco · GMT-5</option><option value="Europe/Lisbon">Lisboa</option><option value="UTC">UTC</option></select></label>
-          </div>
-        </>}
+      <main className="profile-workbench">
+        <section id="identity" className="profile-work-card">
+          <EditorTitle eyebrow="01 · IDENTIDADE" title={pt ? 'Presença profissional' : 'Professional presence'} description={pt ? 'Os dados usados no workspace, relatórios e comunicações.' : 'Details used across the workspace and communications.'}/>
+          <div className="profile-upload-strip"><div className="profile-avatar-preview">{profile.avatar_url ? <img src={profile.avatar_url} alt=""/> : initials(profile.display_name)}</div><div><b>{pt ? 'Foto do perfil' : 'Profile photo'}</b><span>PNG, JPG ou WEBP · 10 MB</span></div><button onClick={() => avatarInput.current?.click()}><UploadCloud/>{uploading === 'avatar_url' ? (pt ? 'Enviando…' : 'Uploading…') : (pt ? 'Trocar foto' : 'Change photo')}</button></div>
+          <div className="profile-form-grid"><Field label={pt ? 'Nome de exibição' : 'Display name'} value={profile.display_name} onChange={value => update('display_name', value)}/><Field label={pt ? 'Cargo ou título' : 'Job title'} value={profile.job_title} onChange={value => update('job_title', value)}/><Field label="E-mail profissional" type="email" value={profile.professional_email} onChange={value => update('professional_email', value)}/><Field label={pt ? 'Telefone profissional' : 'Professional phone'} value={profile.phone} onChange={value => update('phone', value)}/><Field wide label={pt ? 'Bio profissional' : 'Professional bio'} value={profile.bio} onChange={value => update('bio', value)} textarea/><Field label="LinkedIn" type="url" value={profile.linkedin_url} onChange={value => update('linkedin_url', value)}/><Field label="Instagram" type="url" value={profile.instagram_url} onChange={value => update('instagram_url', value)}/><Field label="Website" type="url" value={profile.website_url} onChange={value => update('website_url', value)}/></div>
+        </section>
 
-        {tab === 'access' && <>
-          <EditorTitle eyebrow="SEGURANÇA" title={pt ? 'Acesso exclusivo' : 'Exclusive access'} description={pt ? 'Somente este e-mail ou a senha definida poderão abrir o sistema.' : 'Only this email or the defined password can open the system.'}/>
-          <div className="security-status"><ShieldCheck/><div><strong>{pt ? 'Proteção ativa' : 'Protection active'}</strong><p>{pt ? 'Sessões seguras expiram automaticamente após 12 horas.' : 'Secure sessions automatically expire after 12 hours.'}</p></div><span>ATIVO</span></div>
-          <div className="profile-form-grid">
-            <Field wide label={pt ? 'Único e-mail autorizado para acesso' : 'Only authorized login email'} type="email" value={profile.login_email} onChange={value => update('login_email', value)}/>
-            <Field wide label={pt ? 'Nova senha (deixe vazio para manter)' : 'New password (leave blank to keep)'} type="password" value={newPassword} onChange={setNewPassword} placeholder="Mínimo de 6 caracteres"/>
-          </div>
-          <div className="security-note"><KeyRound/><span>{pt ? 'Você sempre poderá entrar usando o e-mail autorizado ou a senha atual.' : 'You can always sign in with the authorized email or current password.'}</span></div>
-        </>}
+        <section id="brand" className="profile-work-card">
+          <EditorTitle eyebrow="02 · BRAND STUDIO" title={pt ? 'Marca e experiência' : 'Brand and experience'} description={pt ? 'Personalize a interface agora e prepare relatórios com sua identidade.' : 'Personalize the interface and prepare branded reports.'}/>
+          <div className="brand-preview" style={{ '--preview-accent': profile.accent_color } as React.CSSProperties}><div>{profile.logo_url ? <img src={profile.logo_url} alt=""/> : <ImagePlus/>}<span><small>POWERED BY</small><strong>{profile.display_name}</strong></span></div><i/><i/><b>RELATÓRIO DE TALENTOS · 2.1</b></div>
+          <div className="profile-form-grid"><Field label={pt ? 'URL do logotipo' : 'Logo URL'} type="url" value={profile.logo_url} onChange={value => update('logo_url', value)}/><label className="profile-field"><span>{pt ? 'Arquivo da marca' : 'Brand file'}</span><button className="upload-button" onClick={() => logoInput.current?.click()}><UploadCloud/>{uploading === 'logo_url' ? (pt ? 'Enviando…' : 'Uploading…') : (pt ? 'Enviar logotipo' : 'Upload logo')}</button><input ref={logoInput} hidden type="file" accept="image/png,image/jpeg,image/webp" onChange={event => event.target.files?.[0] && upload(event.target.files[0], 'logo_url')}/></label><label className="profile-field color-field"><span>{pt ? 'Cor de destaque' : 'Accent color'}</span><div><input type="color" value={profile.accent_color} onChange={event => update('accent_color', event.target.value)}/><input value={profile.accent_color} onChange={event => update('accent_color', event.target.value)}/></div></label><label className="profile-field"><span>{pt ? 'Tema visual' : 'Visual theme'}</span><select value={profile.theme} onChange={event => update('theme', event.target.value as Profile['theme'])}><option value="light">{pt ? 'Claro' : 'Light'}</option><option value="dark">{pt ? 'Escuro' : 'Dark'}</option><option value="system">{pt ? 'Automático' : 'System'}</option></select></label><label className="profile-field"><span>{pt ? 'Idioma' : 'Language'}</span><select value={profile.language} onChange={event => update('language', event.target.value as Profile['language'])}><option value="pt">Português (Brasil)</option><option value="en">English</option></select></label><label className="profile-field"><span>{pt ? 'Fuso horário' : 'Timezone'}</span><select value={profile.timezone} onChange={event => update('timezone', event.target.value)}><option value="America/Sao_Paulo">Brasília · GMT-3</option><option value="America/Manaus">Manaus · GMT-4</option><option value="America/Rio_Branco">Rio Branco · GMT-5</option><option value="Europe/Lisbon">Lisboa</option><option value="UTC">UTC</option></select></label></div>
+        </section>
 
-        {tab === 'signature' && <>
-          <EditorTitle eyebrow="ASSINATURA AUTOMÁTICA" title={pt ? 'Pronta para cada contato' : 'Ready for every contact'} description={pt ? 'Gerada automaticamente com seus dados e pronta para e-mail ou WhatsApp.' : 'Automatically generated from your details.'}/>
-          <div className="signature-preview" dangerouslySetInnerHTML={{ __html: signature }}/>
-          <div className="signature-actions"><button className="primary" onClick={copySignature}>{copied ? <Check/> : <Clipboard/>}{copied ? 'Copiado!' : 'Copiar HTML'}</button><button onClick={() => download('assinatura-dm-recruit.html', signature, 'text/html')}><Download/>Baixar assinatura</button><button onClick={() => download('perfil-dm-recruit.json', JSON.stringify(profile, null, 2), 'application/json')}><Download/>Exportar perfil</button></div>
-          <p className="signature-help"><ExternalLink/>{pt ? 'A assinatura será a base dos disparos automáticos e pode ser colada no Gmail, Outlook e ferramentas de mensagem.' : 'This signature is used by automatic outreach and can be pasted into Gmail or Outlook.'}</p>
-        </>}
-      </section>
+        <section id="security" className="profile-work-card security-work-card">
+          <EditorTitle eyebrow="03 · SEGURANÇA" title={pt ? 'Acesso exclusivo' : 'Exclusive access'} description={pt ? 'Controle a credencial sem depender de um fluxo tradicional de login.' : 'Control credentials without a traditional login flow.'}/>
+          <div className="security-status"><ShieldCheck/><div><strong>{pt ? 'Proteção ativa' : 'Protection active'}</strong><p>{pt ? 'Cookie HttpOnly e expiração automática em 12 horas.' : 'HttpOnly cookie and automatic 12-hour expiration.'}</p></div><span>{pt ? 'ATIVO' : 'ACTIVE'}</span></div>
+          <div className="profile-form-grid"><Field wide label={pt ? 'Único e-mail autorizado' : 'Only authorized email'} type="email" value={profile.login_email} onChange={value => update('login_email', value)}/><Field wide label={pt ? 'Nova senha (opcional)' : 'New password (optional)'} type="password" value={newPassword} onChange={setNewPassword} placeholder={pt ? 'Mínimo de 6 caracteres' : 'At least 6 characters'}/></div><div className="security-note"><KeyRound/><span>{pt ? 'O e-mail autorizado ou a senha atual, digitados isoladamente, liberam o acesso.' : 'Either the authorized email or current password grants access.'}</span></div>
+        </section>
+
+        <section id="signature" className="profile-work-card">
+          <EditorTitle eyebrow="04 · ASSINATURA" title={pt ? 'Comunicação pronta para uso' : 'Communication ready to use'} description={pt ? 'Pré-visualize e exporte uma assinatura segura com seus dados atuais.' : 'Preview and export a safe signature with your current details.'}/>
+          <div className="signature-preview" dangerouslySetInnerHTML={{ __html: signature }}/><div className="signature-actions"><button className="primary" onClick={copySignature}>{copied ? <Check/> : <Clipboard/>}{copied ? (pt ? 'Copiado!' : 'Copied!') : (pt ? 'Copiar HTML' : 'Copy HTML')}</button><button onClick={() => download('assinatura-dm-recruit.html', signature, 'text/html')}><Download/>{pt ? 'Baixar assinatura' : 'Download signature'}</button><button onClick={() => download('perfil-dm-recruit.json', JSON.stringify(profile, null, 2), 'application/json')}><Download/>{pt ? 'Exportar perfil' : 'Export profile'}</button></div><p className="signature-help"><ExternalLink/>{pt ? 'Compatível com Gmail, Outlook e ferramentas de mensagem.' : 'Compatible with Gmail, Outlook and messaging tools.'}</p>
+        </section>
+
+        <section className="tutorial-center-card" data-tour="tutorial-center"><div><span><BookOpen/></span><div><small>DM ACADEMY</small><h3>{pt ? 'Aprenda fazendo, não lendo manuais' : 'Learn by doing, not by reading manuals'}</h3><p>{pt ? 'O tour abre cada módulo, destaca os controles e pode criar exemplos temporários que são apagados ao final.' : 'The tour opens every module and can create temporary examples removed at the end.'}</p></div></div><button onClick={startTutorial}><MonitorSmartphone/>{pt ? 'Iniciar tutorial guiado' : 'Start guided tutorial'}</button></section>
+      </main>
     </div>
+    <div className="profile-save-dock"><div><span>{completion}%</span><p><b>{pt ? 'Alterações locais' : 'Local changes'}</b><small>{pt ? 'Salve para sincronizar em todos os dispositivos.' : 'Save to sync across devices.'}</small></p></div><button className="primary" onClick={save} disabled={saving}>{saving ? <Loader2 className="spin"/> : <Save/>}{pt ? 'Salvar configurações' : 'Save settings'}</button></div>
   </div>
 }
 
