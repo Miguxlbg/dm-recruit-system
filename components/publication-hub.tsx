@@ -46,8 +46,9 @@ export function PublicationHub({ lang, onEditJob }: { lang: 'pt'|'en', onEditJob
     const body = await response.json()
     if (!response.ok) setError(body.error)
     else {
-      setNotice(body.message)
-      await load()
+      setNotice(body.warning ? `${body.message} ${body.warning}` : body.message)
+      if (body.persistence === 'session') setPortals(current => current.map(item => item.id === portal.id ? { ...item, publication: body.publication } : item))
+      else await load()
       if (body.requires_oauth && action === 'publish') window.open(body.external_url, '_blank', 'noopener,noreferrer')
     }
     setBusy('')

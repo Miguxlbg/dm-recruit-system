@@ -33,6 +33,17 @@ export async function POST(request: NextRequest) {
   if (action === 'publish' && missing.length) return NextResponse.json({ error: `Complete antes: ${missing.join(', ')}.` }, { status: 422 })
   const status = action === 'publish' ? 'ready' : 'paused'
   const { data, error: saveError } = await db.from('job_publications').upsert({ job_id: jobId, portal, status, external_url: provider.url, published_at: action === 'publish' ? new Date().toISOString() : null }, { onConflict: 'job_id,portal' }).select().single()
-  if (saveError) return NextResponse.json({ error: `Execute a migration v2.1 no Supabase. ${saveError.message}` }, { status: 503 })
-  return NextResponse.json({ publication: data, external_url: provider.url, requires_oauth: true, message: action === 'publish' ? 'Vaga validada e preparada. Conecte a conta do portal para concluir a publicação externa.' : 'Publicação pausada.' })
+  if (saveError) {
+    const migrationPending = saveError.message.includes('job_publications') || saveError.code === 'PGRST205'
+    if (!migrationPending) return NextResponse.json({ error: saveError.message }, { status: 503 })
+    return NextResponse.json({
+      publication: { job_id: jobId, portal, status, external_url: provider.url, published_at: action === 'publish' ? new Date().toISOString() : null },
+      external_url: provider.url,
+      requires_oauth: action === 'publish',
+      persistence: 'session',
+      warning: 'A migration v2.1 ainda não foi aplicada. O status funciona nesta sessão e será persistido após executar a migration.',
+      message: action === 'publish' ? 'Vaga validada e preparada. Conecte a conta oficial para concluir.' : 'Publicação pausada nesta sessão.',
+    })
+  }
+  return NextResponse.json({ publication: data, external_url: provider.url, requires_oauth: action === 'publish', persistence: 'supabase', message: action === 'publish' ? 'Vaga validada e preparada. Conecte a conta do portal para concluir a publicação externa.' : 'Publicação pausada.' })
 }
